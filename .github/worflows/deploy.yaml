@@ -1,0 +1,39 @@
+name: Deploy
+
+on:
+  push:
+    branches: {dev}
+
+jobs:
+  deploy:
+    name: Deploy to Datalake
+    runs-on: ubunto-latest
+
+    steps:
+    - uses: action/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: HashiCorp - Stup Terraform
+      uses: hashicorp/stup-terraform@v1.2.1
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        aws-access-key-id: "" 
+        aws-secret-access-key: ""
+        aws-region: us-east-2
+    
+    - name: IaC Apply
+      env:
+        COMMAND_IAC: terraform
+      run: |
+        cd infra
+        $COMMAND_IAC init
+        $COMMAND_IAC plan
+
+
+    
