@@ -1,0 +1,22 @@
+{
+  "Records": [
+    {
+      "EventSource": "aws:sns",
+      "EventVersion": "1.0",
+      "EventSubscriptionArn": "xxxxxx",
+      "Sns": {
+        "Type": "Notification",
+        "MessageId": "xxxxxxx",
+        "TopicArn": "xxxxxx",
+        "Subject": "None",
+        "Message": "{\"key\": \"raw-landing-lab\",\"source\":\"fonte_1\"}",
+        "Timestamp": "2022-12-04T19:05:53.981Z",
+        "SignatureVersion": "1",
+        "Signature": "xxxxxxx",
+        "SigningCertUrl": "xxxxxx",
+        "UnsubscribeUrl": "xxxxxxx",
+        "MessageAttributes": {}
+      }
+    }
+  ]
+}
