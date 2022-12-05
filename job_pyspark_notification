@@ -1,0 +1,35 @@
+import sys
+from awsglue.transforms import *
+from awsglue.utils import getResolvedOptions
+from pyspark.context import SparkContext
+from awsglue.context import GlueContext
+from awsglue.job import Job
+import json
+import boto3
+from datetime import datetime
+now = datetime.now()
+date_process = "%d-%d-%02d-%02d:%02d:%02s " % (now.year, now.month, now.day, now.hour, now.minute, now.second)
+partition = "%d-%d-%02d" % (now.year, now.month, now.day)
+tb_name_target = "tb_layer_função_origem"
+bkt_key = "s3://bkt_key/layer/fonte_1"
+
+## @params: [JOB_NAME]
+args = getResolvedOptions(sys.argv, ['JOB_NAME'])
+
+sc = SparkContext()
+glueContext = GlueContext(sc)
+spark = glueContext.spark_session
+job = Job(glueContext)
+job.init(args['JOB_NAME'], args)
+
+arn = 'arn:aws:sns:region:account-id:topic_ingestion_notification'
+message = {"bkt_key": bkt_key, "tb_name": tb_name_target, "partition": partition, "date_ingestion":date_process}
+print(f'payload: {message}')
+client = boto3.client('sns')
+response = client.publish(
+    TargetArn=arn,
+    Message=json.dumps({'default': json.dumps(message)}),
+    MessageStructure='json'
+)
+
+job.commit()
