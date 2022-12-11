@@ -7,20 +7,14 @@ dynamodb = boto3.resource('dynamodb')
 
 def lambda_handler(event, context):
 
-    print(f'evento de entrada aqui --> {event}')
     message = event['Records'][0]['Sns']['Message']
     # message = event['key']['Message']
 
-
     table = dynamodb.Table('ddb_ingestion')
-    input_msg = json.loads(message)
     print("convert json to dict: ")
-    
-    print("dict_put: ")
-    print(type(input_msg))
-    print(input_msg)
-    
-    print("put item in ddbt: ")
+    input_msg = json.loads(message)
+
+    print("put item in ddb: ")
     response = table.put_item(Item=input_msg)
     print("response put item: ")
     print(response['ResponseMetadata']['HTTPStatusCode'])
