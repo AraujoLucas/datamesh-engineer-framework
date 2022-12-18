@@ -3,12 +3,6 @@ variable "name" {
   description = "Bucket name"
 }
 
-variable "acl" {
-  type = string
-  description = " "
-  default = "private"
-}
-
 variable "policy" {
   type = string
   description = " "
