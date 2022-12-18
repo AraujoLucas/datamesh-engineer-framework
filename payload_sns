@@ -20,3 +20,28 @@
     }
   ]
 }
+
+
+
+
+TB DDB
+{
+  "bkt_key": {
+    "S": "bkt-keylay/tb_teste_audit"
+  },
+  "tb_name": {
+    "S": "tb_teste_audit"
+  },
+  "date_ingestion": {
+    "S": "2022-12-11-19:42:18"
+  },
+  "partition": {
+    "S": "2022-12-11"
+  },
+  "pf": {
+    "B": "boolean"
+  },
+  "status": {
+    "S": "starting load"
+  }
+}
