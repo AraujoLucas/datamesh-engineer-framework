@@ -1,0 +1,54 @@
+module "dynamodb_streams" {
+source = "./dynamodb_streams_module"
+name = "example_table"
+hash_key = "id"
+attribute_name = "id"
+attribute_type = "S"
+lambda_function_name = "example_lambda"
+lambda_runtime = "python3.8"
+lambda_handler = "index.handler"
+}
+
+resource "aws_iam_role" "example_lambda_role" {
+name = "${module.dynamodb_streams.lambda_role_name}"
+assume_role_policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+{
+"Effect": "Allow",
+"Principal": {
+"Service": "lambda.amazonaws.com"
+},
+"Action": "sts:AssumeRole"
+}
+]
+}
+EOF
+}
+
+module "dynamodb_streams" {
+source = "./dynamodb_streams_module"
+name = "example_table"
+hash_key = "id"
+attribute_name = "id"
+attribute_type = "S"
+lambda_function_name = "example_lambda"
+lambda_runtime = "python3.8"
+lambda_handler = "index.handler"
+lambda_role_arn = "${aws_iam_role.example_lambda_role.arn}"
+}
+
+resource "aws_lambda_permission" "example_lambda_dynamodb_permission" {
+statement_id = "AllowExecutionFromDynamoDBStream"
+action = "lambda:InvokeFunction"
+function_name = "${module.dynamodb_streams.lambda_function_name}"
+principal = "dynamodb.amazonaws.com"
+source_arn = "${module.dynamodb_streams.stream_arn}"
+}
+
+resource "aws_lambda_event_source_mapping" "example_lambda_dynamodb_event_source" {
+event_source_arn = "${module.dynamodb_streams.stream_arn}"
+function_name = "${module.dynamodb_streams.lambda_function_name}"
+enabled = true
+}
