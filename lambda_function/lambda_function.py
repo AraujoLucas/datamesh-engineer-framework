@@ -21,7 +21,6 @@ def lambda_handler(event, context):
     return print('build to component')
 '''
 
-# main.py
 from src.hermes import Hermes
 from src.actions.collect import CollectAction
 from src.actions.serialize import SerializeAction
