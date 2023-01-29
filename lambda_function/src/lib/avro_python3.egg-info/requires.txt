@@ -1,0 +1,6 @@
+
+[snappy]
+python-snappy
+
+[zstandard]
+zstandard
