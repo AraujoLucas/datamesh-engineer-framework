@@ -1,0 +1,97 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Job_feature_engineer",
+  "States": {
+    "Job_feature_engineer": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "Parameters": {
+        "JobName": "job_test_data_quality_glue"
+      },
+      "TimeoutSeconds": 10,
+      "ResultPath": "$.my_var",
+      "ResultSelector": {
+        "Status.$": "$.SdkHttpMetadata.HttpStatusCode"
+      },
+      "Next": "wait for etl job success"
+    },
+    "wait for etl job success": {
+      "Type": "Wait",
+      "Seconds": 120,
+      "Next": "check status job feature"
+    },
+    "check status job feature": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.my_var.Status",
+          "NumericEquals": 200,
+          "Next": "verify data quality for dataset input inference"
+        }
+      ],
+      "Default": "topic notification owner"
+    },
+    "verify data quality for dataset input inference": {
+      "Type": "Task",
+      "Next": "verify  status data quality rules",
+      "Parameters": {
+        "RunId": "id_quality_rule"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:glue:getDataQualityRulesetEvaluationRun"
+    },
+    "verify  status data quality rules": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.Status",
+          "StringEquals": "SUCCEEDED",
+          "Next": "job inference ML"
+        }
+      ],
+      "Default": "topic notification owner"
+    },
+    "job inference ML": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sagemaker:createTransformJob",
+      "Parameters": {
+        "ModelName": "SageMakerCreateTransformJobModel-9iFBKsYti9vr",
+        "TransformInput": {
+          "CompressionType": "None",
+          "ContentType": "text/csv",
+          "DataSource": {
+            "S3DataSource": {
+              "S3DataType": "S3Prefix",
+              "S3Uri": "s3://my-s3bucket"
+            }
+          }
+        },
+        "TransformOutput": {
+          "S3OutputPath": "s3://my-s3bucket-example-1/TransformJobOutputPath"
+        },
+        "TransformResources": {
+          "InstanceCount": 1,
+          "InstanceType": "ml.m4.xlarge"
+        },
+        "TransformJobName": "sfn-binary-classification-prediction"
+      },
+      "Next": "verify data quality for dataset output inference"
+    },
+    "verify data quality for dataset output inference": {
+      "Type": "Task",
+      "Next": "topic notification owner",
+      "Parameters": {
+        "ResultId": "MyData.$"
+      },
+      "Resource": "arn:aws:states:::aws-sdk:glue:getDataQualityResult"
+    },
+    "topic notification owner": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message.$": "$",
+        "TopicArn": "arn:aws:sns:region:accout-id:topic_test_notification"
+      },
+      "End": true
+    }
+  }
+}
