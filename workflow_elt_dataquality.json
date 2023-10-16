@@ -1,0 +1,78 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "job_etl_output_dataset",
+  "States": {
+    "job_etl_output_dataset": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "Parameters": {
+        "JobName": "job_etl_data"
+      },
+      "TimeoutSeconds": 10,
+      "ResultPath": "$.my_var",
+      "ResultSelector": {
+        "Status.$": "$.SdkHttpMetadata.HttpStatusCode"
+      },
+      "Next": "wait for etl job success"
+    },
+    "wait for etl job success": {
+      "Type": "Wait",
+      "Seconds": 40,
+      "Next": "check status job feature"
+    },
+    "check status job feature": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.my_var.Status",
+          "NumericEquals": 200,
+          "Next": "job_quality_dataset"
+        }
+      ],
+      "Default": "topic notification owner"
+    },
+    "job_quality_dataset": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun",
+      "Parameters": {
+        "JobName": "job_test_data_quality_glue"
+      },
+      "TimeoutSeconds": 10,
+      "ResultPath": "$.my_var",
+      "ResultSelector": {
+        "Status.$": "$.SdkHttpMetadata.HttpStatusCode"
+      },
+      "Next": "wait for quality job success"
+    },
+    "wait for quality job success": {
+      "Type": "Wait",
+      "Seconds": 120,
+      "Next": "verify  status data quality rules"
+    },
+    "verify  status data quality rules": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.my_var.Status",
+          "NumericEquals": 200,
+          "Next": "quality result is ok"
+        }
+      ],
+      "Default": "topic notification owner"
+    },
+    "quality result is ok": {
+      "Type": "Pass",
+      "Result": "Status is 200",
+      "End": true
+    },
+    "topic notification owner": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::sns:publish",
+      "Parameters": {
+        "Message.$": "$",
+        "TopicArn": "arn:aws:sns:us-east-1:accout-id:topic_test_notification"
+      },
+      "End": true
+    }
+  }
+}
