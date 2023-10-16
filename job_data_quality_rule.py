@@ -19,8 +19,8 @@ def load_table(glueContext):
     print('lendo DF')
     dyf_input = glueContext.create_dynamic_frame.from_catalog(
         database='db_workspace',
-        table_name='tb_study_quality_v1',
-        push_down_predicate='anomesdia=20231012'
+        table_name='tb_study_quality_output',
+        push_down_predicate='partition'
         )
     
     print('verify schema input')
@@ -32,17 +32,7 @@ def apply_quality(dyf):
     ruleset = """
         Rules = [
         ColumnExists "col_1",
-        IsComplete "col_2",
-        ColumnExists "col_2",
-        IsComplete "col_3",
-        ColumnExists "col_3",
-        IsComplete "col_4",
-        ColumnExists "col_4",
-        IsComplete "col_5",
-        ColumnExists "col_5",
-        IsComplete "col_1",
-        ColumnExists "anomesdia",
-        IsComplete "anomesdia"
+        IsComplete "col_2"
         ]"""
     
     print(f'apply quality rules {ruleset}')
@@ -50,13 +40,46 @@ def apply_quality(dyf):
         frame=dyf,
         ruleset=ruleset,
         publishing_options={
-            "dataQualityEvaluationContext": "dyf",
+            "dataQualityEvaluationContext": "dqResults",
             "enableDataQualityCloudWatchMetrics": True,
             "enableDataQualityResultsPublishing": True,
-            "resultsS3Prefix": "s3://bkt/output_quality/job_x/",
+            "resultsS3Prefix": "s3://bkt-key/spec/output_quality/job_x/",
         },
     )
     
+    print(boto3.__version__)
+    session = boto3.session.Session()
+    client = session.client('glue')
+    
+    response_list_data_quality_ruleset_evaluation_runs_listss = client.list_data_quality_ruleset_evaluation_runs()
+    print(f' result response_list_data_quality_ruleset_evaluation_runs_listss -- \n {response_list_data_quality_ruleset_evaluation_runs_listss}')
+    
+    response_get_data_quality_ruleset = client.get_data_quality_ruleset(Name='dqResults')
+    print(f' result get_data_quality_ruleset -- \n {response_get_data_quality_ruleset}')
+    
+    # response = client.get_data_quality_result(ResultId='jr_')
+    
+    '''
+    response = client.batch_get_data_quality_result(
+        ResultIds=[
+            'id',
+        ]
+    )
+    
+    # response = client.list_jobs()
+    '''
+    response_list_data_quality_ruleset_evaluation_runs = client.list_data_quality_results(
+        Filter={
+            'DataSource': {
+                'GlueTable': {
+                    'DatabaseName': 'db_workspace',
+                    'TableName': 'tb_study_quality_output'
+                }
+            },
+            'JobName': 'job_test_data_quality_glue'
+        })
+    print(f' result list_data_quality_results -- \n {response_list_data_quality_results}')
+        
     print('format dyf to df')
     df_input_validated = format_df(dyf)
     df_input_validated.show()
@@ -75,19 +98,21 @@ def main():
     job = Job(glueContext)
 
     job.init(glue_params['JOB_NAME'], glue_params)
-
+    
+    print('boto3.__version__')
+    print(boto3.__version__)
     dyf_input = load_table(glueContext)
     
     df_validated, dq_validated = apply_quality(dyf_input)
     
     print('select')
     df_x = dq_validated.select("Rule","Outcome").show()
-    '''
+
     print('load')
-    df_id = spark.read.load("s3://bkt")
-    df_id.show()
-    print('select')
-    df_x = df_id.select("dqRunId").show()
+    df_id = spark.read.csv("s3://bkt-key/sor/output_quality/job_x/", header=True)
+    df_id.show(3, truncate=False)
+    
+    
     '''
     my_var = "id_xpto"
 
@@ -96,7 +121,7 @@ def main():
         "my_var": my_var
     }
 
-  
+    '''
     job.commit()
     
 if __name__ == '__main__':
