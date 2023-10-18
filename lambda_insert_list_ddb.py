@@ -1,3 +1,37 @@
+# policy-role
+'''
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": [
+        "arn:aws:s3:::bkt-name/*",
+        "arn:aws:dynamodb:regiao:accout-id:tabela/tb_name"
+      ]
+    }
+  ]
+}
+
+# trust-role
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+'''
+
 import json
 import boto3
 import pandas as pd
