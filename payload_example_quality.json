@@ -1,0 +1,14 @@
+[
+  {
+    "sourcer_database":"db_origem",
+    "source_table":"tb_data_input_study_quality",
+    "partition_key":"20231204",
+    "output_database":"db_output",
+    "output_table":"tb_quality_full_study",
+    "data_quality_rules":[
+      {"ColumnExists":"key"},
+      {"ColumnExists":"key"}],
+    "stage":"origem",
+    "jornada":"jornada_1"
+  }
+]
