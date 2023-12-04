@@ -3,6 +3,7 @@ import json
 from awsglue.transforms import *
 from awsglue.utils import getResolvedOptions
 from pyspark.context import SparkContext
+from pyspark.sql.functions import lit
 from awsglue.context import GlueContext
 from awsglue.job import Job
 from awsglue.dynamicframe import DynamicFrame
@@ -10,118 +11,117 @@ from awsgluedq.transforms import EvaluateDataQuality
 import boto3
 from datetime import datetime
 
-def format_df(dyf):
-    df = dyf.toDF()
-    df.show(3)
-    return df
+def extract_rules_payload(rules):
+    formatted_rules = [f'{list(rule.keys())[0]} "{list(rule.values())[0]}"' for rule in rules]
+    payload = "Rules = [\n{}\n]".format(',\n'.join(formatted_rules))
+    return payload
 
-def load_table(glueContext):
-    print('lendo DF')
+def extract_params(each_params):
+    job_name = each_params.get('JOB_NAME', '')
+    source_database = each_params.get('sourcer_database', '')
+    source_table = each_params.get('source_table', '')
+    partition_key = each_params.get('partition_key', '')
+    rules = extract_rules_payload(each_params.get('data_quality_rules', []))
+    stage = each_params.get('stage', '')
+    jornada = each_params.get('jornada', '')
+    output_database = each_params.get('output_database', '')
+    output_table = each_params.get('output_table', '')
+    print(f"job_name: {job_name}\n"
+          f"Database Source: {source_database}\n"
+          f"Table Source: {source_table}\n"
+          f"Partition: {partition_key}\n"
+          f"Rules: {rules}\n"
+          f"Stage: {stage}\n"
+          f"Jornada: {jornada}\n"
+          f"Database target: {output_database}\n"
+          f"Table Target: {output_table}")
+    return job_name,source_database,source_table,\
+    partition_key,rules,stage,jornada,output_database,output_table
+
+def load_table(glueContext,source_database,source_table,partition_key):
+    print(f'{datetime.now()} ::: starting data load  :::')
     dyf_input = glueContext.create_dynamic_frame.from_catalog(
-        database='db_workspace',
-        table_name='tb_study_quality_output',
-        push_down_predicate='partition'
+        database=source_database,
+        table_name=source_table,
+        push_down_predicate=f'anomesdia={partition_key}'
         )
-    
-    print('verify schema input')
-    dyf_input.printSchema()
-    
+    print(f'{datetime.now()} ::: end of data loading  :::')
+    dyf_input.show(3)
     return dyf_input
 
-def apply_quality(dyf):
-    ruleset = """
-        Rules = [
-        ColumnExists "col_1",
-        IsComplete "col_2"
-        ]"""
-    
+def apply_quality(dyf_table_input,rules):
+    ruleset = f"""{rules}"""
     print(f'apply quality rules {ruleset}')
-    dqResults = EvaluateDataQuality.apply(
-        frame=dyf,
+    dyf_results_quality = EvaluateDataQuality.apply(
+        frame=dyf_table_input,
         ruleset=ruleset,
         publishing_options={
-            "dataQualityEvaluationContext": "dqResults",
+            "dataQualityEvaluationContext": "ruleset_jornada_1",
             "enableDataQualityCloudWatchMetrics": True,
-            "enableDataQualityResultsPublishing": True,
-            "resultsS3Prefix": "s3://bkt-key/spec/output_quality/job_x/",
+            "enableDataQualityResultsPublishing": True
         },
     )
-    
-    print(boto3.__version__)
-    session = boto3.session.Session()
-    client = session.client('glue')
-    
-    response_list_data_quality_ruleset_evaluation_runs_listss = client.list_data_quality_ruleset_evaluation_runs()
-    print(f' result response_list_data_quality_ruleset_evaluation_runs_listss -- \n {response_list_data_quality_ruleset_evaluation_runs_listss}')
-    
-    response_get_data_quality_ruleset = client.get_data_quality_ruleset(Name='dqResults')
-    print(f' result get_data_quality_ruleset -- \n {response_get_data_quality_ruleset}')
-    
-    # response = client.get_data_quality_result(ResultId='jr_')
-    
-    '''
-    response = client.batch_get_data_quality_result(
-        ResultIds=[
-            'id',
-        ]
-    )
-    
-    # response = client.list_jobs()
-    '''
-    response_list_data_quality_ruleset_evaluation_runs = client.list_data_quality_results(
-        Filter={
-            'DataSource': {
-                'GlueTable': {
-                    'DatabaseName': 'db_workspace',
-                    'TableName': 'tb_study_quality_output'
-                }
-            },
-            'JobName': 'job_test_data_quality_glue'
-        })
-    print(f' result list_data_quality_results -- \n {response_list_data_quality_results}')
-        
-    print('format dyf to df')
-    df_input_validated = format_df(dyf)
-    df_input_validated.show()
-    dq_validated = format_df(dqResults)
-    dq_validated.show()
+    return dyf_results_quality
 
-    return df_input_validated, dq_validated
+def format_df(job_name,source_table,dyf_results_quality,stage,jornada,partition_key):
+    df = dyf_results_quality.toDF()
+    df_quality_full = df.withColumn("job_name", lit(job_name))\
+            .withColumn("table_name", lit(source_table))\
+            .withColumnRenamed("Rule", "rule_name")\
+            .withColumnRenamed("Outcome", "status")\
+            .withColumn("stage", lit(stage))\
+            .withColumn("jornada", lit(jornada))\
+            .withColumn("anomesdia", lit(partition_key))\
+            .select('job_name','table_name','rule_name',\
+                    'status','stage','jornada','anomesdia')
+    df_quality_full.show(5, truncate=False)
+    return df_quality_full
+
+def write_catalog(glueContext,output_database,output_table,df_quality_results):
+    dyf_results_quality = DynamicFrame.fromDF(
+        df_quality_results, glueContext, "dyf_results_quality")
+    print(f'{datetime.now()} ::: starting data write in catalog :::')
+    glueContext.write_dynamic_frame.from_catalog(
+        frame = dyf_results_quality,
+        database = output_database,
+        table_name = output_table,
+        additional_options={
+            "partitionKeys": ["anomesdia"]
+        }
+    )
+    return print(f'{datetime.now()} ::: finished recording data in the catalog :::')
 
 def main():
-    print(f'{datetime.now()} --- Init job \n')
+    print(f'{datetime.now()} ::: start job :::')
     glue_params = getResolvedOptions(sys.argv, ['JOB_NAME','glue_params'])
+    print(f'{datetime.now()} ::: params ::: {glue_params}')
     
     sc = SparkContext()
-    glueContext = GlueContext(SparkContext.getOrCreate())
+    glueContext = GlueContext(sc.getOrCreate())
     spark = glueContext.spark_session
     job = Job(glueContext)
 
     job.init(glue_params['JOB_NAME'], glue_params)
     
-    print('boto3.__version__')
-    print(boto3.__version__)
-    dyf_input = load_table(glueContext)
-    
-    df_validated, dq_validated = apply_quality(dyf_input)
-    
-    print('select')
-    df_x = dq_validated.select("Rule","Outcome").show()
+    for each_param in json.loads(glue_params["glue_params"]):    
+         print(f'{datetime.now()} ::: initializing glue job with job params {each_param}\n')
+       
+         print(f'{datetime.now()} ::: running task extract params for job :::')
+         job_name,source_database,source_table,partition_key,\
+         rules,stage,jornada,output_database,output_table = extract_params(each_param)
+         
+         print(f'{datetime.now()} ::: running task load data :::')
+         dyf_table_input = load_table(glueContext,source_database,source_table,partition_key)
+         
+         print(f'{datetime.now()} ::: running task apply quality rule :::')
+         dyf_results_quality = apply_quality(dyf_table_input,rules)
 
-    print('load')
-    df_id = spark.read.csv("s3://bkt-key/sor/output_quality/job_x/", header=True)
-    df_id.show(3, truncate=False)
-    
-    
-    '''
-    my_var = "id_xpto"
+         print(f'{datetime.now()} ::: running taks formating results quality :::')
+         df_quality_results = format_df(job_name,source_table,dyf_results_quality,stage,jornada,partition_key)
+        
+         print(f'{datetime.now()} ::: running task write in catalog :::')
+         write_catalog(glueContext,output_database,output_table,df_quality_results)
 
-    result = {
-        "job_result": "Concluído com sucesso",
-        "my_var": my_var
-    }
-
-    '''
     job.commit()
     
 if __name__ == '__main__':
