@@ -1,3 +1,12 @@
+# dynamodb model
+'''
+{
+  "PartitionKey": {
+    "S": ""
+  }
+}
+'''
+
 import json
 import boto3
 
