@@ -68,3 +68,37 @@ from tb_quality_full_study
 group by anomesdia
 order by qntd_linhas desc
 
+
+
+-- ####################### measure mttr for work ####################### 
+
+with falhas_consecutivas as (
+    select
+        job_name,
+        status,
+        process_datetime,
+        lag(process_datetime) over (partition by job_name order by process_datetime) as ultimo_processamento,
+        lag(status) over (partition by job_name order by process_datetime) as status_anterior
+    from
+        tb_quality_mttr_study
+),
+mtt_for_incidente as(
+select
+    job_name,
+    process_datetime as falha_atual,
+    ultimo_processamento as falha_anterior,
+    date_diff('second', ultimo_processamento, process_datetime) / 60.0 as tempo_reparo_minutos
+from
+    falhas_consecutivas
+where
+    status_anterior = 'failed' and status_anterior = 'failed' and ultimo_processamento is not null 
+) 
+select job_name,
+    COUNT(*) as total_incidentes,
+    AVG(tempo_reparo_minutos) as mttr_semanal_job
+from mtt_for_incidente
+group by
+    job_name;
+
+select *
+from tb_quality_mttr_study
