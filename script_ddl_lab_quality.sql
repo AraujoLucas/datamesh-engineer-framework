@@ -71,34 +71,43 @@ order by qntd_linhas desc
 
 
 -- ####################### measure mttr for work ####################### 
-
-with falhas_consecutivas as (
-    select
+WITH Incidentes AS (
+    SELECT
         job_name,
-        status,
-        process_datetime,
-        lag(process_datetime) over (partition by job_name order by process_datetime) as ultimo_processamento,
-        lag(status) over (partition by job_name order by process_datetime) as status_anterior
-    from
-        tb_quality_mttr_study
+        MIN(process_datetime) AS tempo_inicio,
+        MAX(process_datetime) AS tempo_fim
+    FROM
+        sua_tabela
+    WHERE
+        status = 'failed'
+    GROUP BY
+        job_name
 ),
-mtt_for_incidente as(
-select
-    job_name,
-    process_datetime as falha_atual,
-    ultimo_processamento as falha_anterior,
-    date_diff('second', ultimo_processamento, process_datetime) / 60.0 as tempo_reparo_minutos
-from
-    falhas_consecutivas
-where
-    status_anterior = 'failed' and status_anterior = 'failed' and ultimo_processamento is not null 
-) 
-select job_name,
-    COUNT(*) as total_incidentes,
-    AVG(tempo_reparo_minutos) as mttr_semanal_job
-from mtt_for_incidente
-group by
-    job_name;
-
-select *
-from tb_quality_mttr_study
+Recuperacoes AS (
+    SELECT
+        job_name,
+        MIN(process_datetime) AS tempo_recuperacao
+    FROM
+        sua_tabela
+    WHERE
+        status = 'passed'
+    GROUP BY
+        job_name
+)
+SELECT
+    'Total' AS job_name,
+    AVG(TIMESTAMPDIFF(SECOND, i.tempo_inicio, r.tempo_recuperacao)) AS mttr_total
+FROM
+    Incidentes i
+JOIN
+    Recuperacoes r ON i.job_name = r.job_name
+UNION ALL
+SELECT
+    i.job_name,
+    AVG(TIMESTAMPDIFF(SECOND, i.tempo_inicio, r.tempo_recuperacao)) AS mttr
+FROM
+    Incidentes i
+JOIN
+    Recuperacoes r ON i.job_name = r.job_name
+GROUP BY
+    i.job_name
