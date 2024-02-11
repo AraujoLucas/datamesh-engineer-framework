@@ -71,63 +71,67 @@ order by qntd_linhas desc
 
 
 -- ####################### measure mttr for work ####################### 
-WITH origem AS (
+with origem AS (
     SELECT
         job_name,
         rule_name,
         status,
-        process_datetime
+        process_datetime,
+        anomesdia
     FROM
         tb_quality_mttr_study
 ),
 falhas AS (
     SELECT
         job_name,
-        DATE(process_datetime) AS data,
-        MIN(process_datetime) AS falha_time
+        MIN(process_datetime) AS fail_time,
+        COUNT(*) AS qntd_incidentes,
+        anomesdia
     FROM
         origem
     WHERE
         status = 'failed'
     GROUP BY
-        job_name,
-        DATE(process_datetime)
+        job_name, anomesdia
 ),
 recuperacoes AS (
     SELECT
         job_name,
-        DATE(process_datetime) AS data,
-        MIN(process_datetime) AS recuperacao_time
+        anomesdia,
+        MIN(process_datetime) AS recovery_time
     FROM
         origem
     WHERE
         status = 'passed'
     GROUP BY
-        job_name,
-        DATE(process_datetime)
+        job_name, anomesdia
 ),
-results AS (
+joined_data AS (
     SELECT
         f.job_name,
-        f.data,
-        f.falha_time,
-        r.recuperacao_time
+        f.anomesdia,
+        f.fail_time,
+        r.recovery_time,
+        f.qntd_incidentes,
+        ROW_NUMBER() OVER (PARTITION BY f.job_name, f.anomesdia ORDER BY r.recovery_time) AS rn
     FROM
         falhas f
-    LEFT JOIN
-        recuperacoes r ON f.job_name = r.job_name
-        AND f.data = r.data
-)
+    JOIN
+        recuperacoes r ON f.job_name = r.job_name AND f.anomesdia <= r.anomesdia
+),results as (
 SELECT
-    r.job_name,
-    r.data,
-    r.falha_time,
-    r.recuperacao_time,
-    AVG(date_diff('minute', r.falha_time, r.recuperacao_time)) AS mttr_minute
+    job_name,
+    fail_time,
+    recovery_time,
+    qntd_incidentes,
+    avg(date_diff('minute',fail_time, recovery_time)) / 60 as mttr_horas
 FROM
-    results r
-GROUP BY
-    r.job_name,
+    joined_data
+WHERE
+    rn = 1
+group by job_name,fail_time,recovery_time,qntd_incidentes,anomesdia
+) select * from results
+where mttr_horas > 0
     r.data,
     r.falha_time,
     r.recuperacao_time;
