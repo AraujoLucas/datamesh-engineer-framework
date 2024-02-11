@@ -132,7 +132,3 @@ WHERE
 group by job_name,fail_time,recovery_time,qntd_incidentes,anomesdia
 ) select * from results
 where mttr_horas > 0
-    r.data,
-    r.falha_time,
-    r.recuperacao_time;
-
