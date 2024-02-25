@@ -1,0 +1,14 @@
+{
+  "source": ["aws.glue"],
+  "detail-type": ["Glue Data Catalog Table State Change"],
+  "detail": {
+    "databaseName": [{
+      "prefix": "db"
+    }],
+    "tableName": [{
+      "prefix": "tb1"
+    }, {
+      "prefix": "tb2"
+    }]
+  }
+}
