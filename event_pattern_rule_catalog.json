@@ -12,3 +12,12 @@
     }]
   }
 }
+
+{
+  "source": ["aws.glue"],
+  "detail-type": ["Glue Data Catalog Table State Change"],
+  "detail": {
+    "databaseName": ["db1"],
+    "tableName": ["tb1", "tb2"]
+  }
+}
