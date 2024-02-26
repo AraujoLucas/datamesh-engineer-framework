@@ -21,3 +21,32 @@
     "tableName": ["tb1", "tb2"]
   }
 }
+
+{
+  "Comment": "testzin events",
+  "StartAt": "extract parameters events",
+  "States": {
+    "extract parameters events": {
+      "Type": "Pass",
+      "Result": {
+        "databaseName.$": "$.detail.databaseName",
+        "tableName.$": "$.detail.tableName",
+        "partitions.$": "$.detail.changedPartitions"
+      },
+      "Next": "start job"
+    },
+    "start job": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "job_test_data_quality_glue",
+        "Arguments": {
+          "DatabaseName.$": "$.databaseName",
+          "TableName.$": "$.tableName",
+          "Partitions.$": "$.partitions"
+        }
+      },
+      "End": true
+    }
+  }
+}
