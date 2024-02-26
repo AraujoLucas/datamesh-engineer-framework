@@ -45,18 +45,3 @@ TB DDB
     "S": "starting load"
   }
 }
-
-
-
-OKRs atividades chaves
-Análise de Jornadas do Usuário:
-Atividade: Realizar análises de dados detalhadas para mapear as jornadas dos usuários no aplicativo, identificando os principais pontos de interação e possíveis gargalos.
-KR: Redução de X% no tempo médio de conclusão das etapas principais das jornadas dos usuários dentro de Y meses.
-
-Entrevistas com Usuários e Feedbacks:
-Atividade: Desenvolver um sistema automatizado para coletar e analisar feedbacks dos usuários em tempo real, categorizando-os por tema e priorizando as áreas de maior insatisfação.
-KR: Aumento de X% na taxa de satisfação dos usuários, conforme medido por pesquisas regulares de NPS, dentro de Y trimestres.
-
-Benchmarking e Melhores Práticas do Setor:
-Atividade: Conduzir análises comparativas com concorrentes e líderes de mercado, identificando lacunas de desempenho e áreas de oportunidade para inovação.
-KR: Alcançar um posicionamento entre os 10% superiores em relação às métricas de engajamento e satisfação do cliente em comparação com os concorrentes diretos dentro de Y semestres.
