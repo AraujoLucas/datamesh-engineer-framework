@@ -1,0 +1,67 @@
+MODELAGEM:
+-de 1 a 10 quanto você utiliza modelagem de dados no seu dia dia? (pergunta para entender a relevância)
+
+de 1 a 10 quanto você tem propriedade em modelagem logica? 
+de 1 a 10 quanto você tem propriedade em modelagem física?
+(perguntas para entender a profundidade)
+
+IAC + CI/CD:
+de 1 a 10 quanto você utiliza as esteiras de deploy da instituição no seu dia dia? (pergunta para entender a relevância)
+
+de 1 a 10 quanto você tem propriedade em terraform?
+de 1 a 10 quanto você tem propriedade em cloudformation?
+de 1 a 10 quanto você tem propriedade em AWS CDK(cloud development kit)?
+de 1 a 10 quanto você tem propriedade em AWS CLI?
+de 1 a 10 quanto você tem propriedade em git hub + git actions?
+de 1 a 10 quanto você tem propriedade em git hub + code pipeline? 
+de 1 a 10 quanto você tem propriedade em testes unitários?
+de 1 a 10 quanto você tem propriedade em testes integrados?
+de 1 a 10 quanto você tem propriedade em testes 
+(perguntas para entender a profundidade)
+
+ARQUITETURA:
+de 1 a 10 quanto você utiliza os conceitos de Data Mesh no dia dia(PRODUCER, CONSUMER, SOR SOT, SPEC, CATALOGO DE DADOS, GOVERNANÇA)? (pergunta para entender a relevância)
+
+de 1 a 10 quanto você tem propriedade em data mesh?
+de 1 a 10 quanto você tem propriedade em data lake?
+de 1 a 10 quanto você tem propriedade em data warehouse?
+(perguntas para entender a profundidade)
+
+FERRAMENTAL:
+de 1 a 10 quanto você utiliza ferramentas AWS no dia dia? (pergunta para entender a relevância)
+
+de 1 a 10 quanto você tem propriedade em well architected framework aws?
+de 1 a 10 quanto você tem propriedade em network (REGIONS, VPC, SUBNET, AZS, SECURITY GROUPS)  aws?
+de 1 a 10 quanto você tem propriedade em conectividade (enpoints, route tables, acls) aws?
+de 1 a 10 quanto você tem propriedade em autenticação/autorização (OUs, SCPs, USERs, IAM Roles e policys, identity based policy, resource based policy) aws?
+de 1 a 10 quanto você tem propriedade em stack aws (s3,glue, emr, stepfunctions, athena, lambda, dynamo, sqs, sns, kms, quickisght, lakeformation, cloudwatch, cloudtrail) ?
+
+NEGÓCIO:
+de 1 a 10 quanto você utiliza os conceitos do produto que você atua(pix, credito, login)? (pergunta para entender a relevância)
+
+de 1 a 10 quanto você tem propriedade no tema?
+
+- Assessment do ambiente de dados: 
+
+quantidade total de bases SOR
+quantidade total de bases SOT
+quantidade total de bases SPEC
+
+quantidade total de bases SOR DEMOCRATIZADA
+quantidade total de bases SOT DEMOCRATIZADA
+quantidade total de bases SPEC DEMOCRATIZADA
+
+quantidade total de workflows que atende indicadores na consumer?
+quantidade total de workflows que atende modelos de ml na consumer?
+sua squad tem quantos JOBs de ETL que atende indicadores na consumer?
+quantos deles tem data quality implementado?
+sua squad tem quantos JOBs que atende modelos de ml na consumer?
+quantos deles tem data quality implementado?
+
+sua squad tem quantos workflows que atende indicadores na producer?
+sua squad tem quantos workflows que atende modelos de ml na producer?
+
+sua squad tem quantos JOBs de ETL que atende indicadores na producer?
+quantos deles tem data quality implementado?
+sua squad tem quantos JOBs de ETL que atende modelos de ml na producer?
+quantos deles tem data quality implementado?
