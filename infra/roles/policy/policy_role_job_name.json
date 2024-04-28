@@ -1,0 +1,18 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "glue:*",
+                "athena:*",
+                "s3:*",
+                "logs:*",
+                "cloudwatch:*",
+                "ec2:*",
+                "kms:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

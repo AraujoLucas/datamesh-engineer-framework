@@ -1,0 +1,24 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "glue:Get*",
+                "glue:Start*",
+                "glue:List*",
+                "athena:*"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kms:GeneratedDataKey*",
+                "kms:Encrypt",
+                "kms:Decrypt"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
