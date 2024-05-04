@@ -39,10 +39,22 @@ variable "enable_kms_alias" {
 variable "alias" {
   description = "The KMS alias name."
   type        = string
-  default     = ""
 }
 
 variable "encryption_configuration" {
   description = "Encryption configuration for Glue Security Configuration."
-  default     = {}
+  type = object({
+    cloudwatch_encryption = list(object({
+      cloudwatch_encryption_mode = string
+      kms_key_arn                = string
+    }))
+    job_bookmarks_encryption = list(object({
+      job_bookmarks_encryption_mode = string
+      kms_key_arn                   = string
+    }))
+    s3_encryption = list(object({
+      s3_encryption_mode = string
+      kms_key_arn        = string
+    }))
+  })
 }
