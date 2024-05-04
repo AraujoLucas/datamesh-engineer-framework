@@ -90,21 +90,21 @@ module "glue_security_configuration" {
     cloudwatch_encryption = [
       {
       cloudwatch_encryption_mode = "SSE-KMS"
-      kms_key_arn = "arn:aws:kms:us-east-1:587791419323:key/31675533-a34c-47b0-bced-5b3ddb25e24d"
+      kms_key_arn = "arn:aws:kms:us-east-1:account-id:key/hash"
       }
     ]
 
     job_bookmarks_encryption = [
       {
       job_bookmarks_encryption_mode = "CSE-KMS"
-      kms_key_arn = "arn:aws:kms:us-east-1:587791419323:key/31675533-a34c-47b0-bced-5b3ddb25e24d"
+      kms_key_arn = "arn:aws:kms:us-east-1:account-id:key/hash"
       }
     ]
 
     s3_encryption = [
       {
       s3_encryption_mode = "SSE-KMS"
-      kms_key_arn        = "arn:aws:kms:us-east-1:587791419323:key/31675533-a34c-47b0-bced-5b3ddb25e24d"
+      kms_key_arn        = "arn:aws:kms:us-east-1:account-id:key/hash"
       }
     ]
   }
