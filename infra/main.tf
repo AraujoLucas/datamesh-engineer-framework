@@ -90,21 +90,20 @@ module "glue_security_configuration" {
     cloudwatch_encryption = [
       {
       cloudwatch_encryption_mode = "SSE-KMS"
-      kms_key_arn = "arn:aws:kms:us-east-1:account-id:key/hash"
+      kms_key_arn = "arn:aws:kms:region${data.aws_caller_identity.current.account_id}:key/hash"
       }
     ]
 
     job_bookmarks_encryption = [
       {
       job_bookmarks_encryption_mode = "CSE-KMS"
-      kms_key_arn = "arn:aws:kms:us-east-1:account-id:key/hash"
+      kms_key_arn = "arn:aws:kms:region${data.aws_caller_identity.current.account_id}:key/hash"
       }
     ]
-
     s3_encryption = [
       {
       s3_encryption_mode = "SSE-KMS"
-      kms_key_arn        = "arn:aws:kms:us-east-1:account-id:key/hash"
+      kms_key_arn        = "arn:aws:kms:region${data.aws_caller_identity.current.account_id}:key/hash"
       }
     ]
   }
@@ -115,10 +114,15 @@ module "glue_security_configuration" {
 #//module "glue_connection" {
 #//  source = "/infra/glue_connection"
 #
-#//}
+#//}a
 #
-#//module "glue_job" {
-#//  source = "/infra/glue_job"
-#//  depends_on = [module.glue_connection, module.glue_security_configuration]
-#
-#//}
+
+module "glue_job" {
+  source = "./glue/job"
+
+  job_name        = "job_template_python"
+  job_enable      = true
+  job_role_arn    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/role_name"
+  
+  depends_on = [module.roles, module.glue_security_configuration]
+}

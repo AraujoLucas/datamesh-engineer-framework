@@ -24,29 +24,3 @@ resource "aws_iam_policy_attachment" "policy_attachment" {
 
   // Outras configurações do bloco de anexo de política IAM...
 }
-
-
-
-
-#resource "aws_iam_policy" "policy_role_job_name" {
-#  name        = "policy_role_job_name"
-#  policy      = file("${path.module}/../policy/policy_role_job_name.json") 
-#}
-#
-#resource "aws_iam_role" "job_role" {
-#  for_each = { for idx, role in var.roles : idx => role }
-#
-#  name               = each.value.name
-#  assume_role_policy = file("${path.module}/../trust/trust_role_job_name.json")  # Atualizado o caminho para o arquivo de política de confiança
-#  # Outras configurações do recurso de papel IAM...
-#}
-#
-#resource "aws_iam_policy_attachment" "attachment" {
-#  for_each = { for idx, role in var.roles : idx => role }
-#
-#  name       = "policy_attachment_${aws_iam_policy.policy_role_job_name.name}_${aws_iam_role.job_role[each.key].name}"
-#  roles      = [aws_iam_role.job_role[each.key].name]
-#  policy_arn = aws_iam_policy.policy_role_job_name.arn
-#}
-
-
