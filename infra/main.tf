@@ -46,7 +46,9 @@ module "roles" {
 
 module "glue_security_configuration" {
   source = "./glue/security_configuration"
-  
+
+  deletion_window_in_days = var.deletion_window_in_days
+  enable_key_rotation     = var.enable_key_rotation
   tags = {
     Environment = "dev"
     Department  = "Data engineers"
@@ -82,21 +84,29 @@ module "glue_security_configuration" {
       ]
     }
   EOL
-  enable_kms_alias = var.enable_kms_alias
-  alias            = var.alias
-  encryption_configuration {
-    cloudwatch_encryption {
-      cloudwatch_encryption_mode = ""
-    }
+  # enable_kms_alias = var.enable_kms_alias
+  alias            = "kms/alias-sg"
+  encryption_configuration = {
+    cloudwatch_encryption = [
+      {
+      cloudwatch_encryption_mode = "SSE-KMS"
+      kms_key_arn = "arn:aws:kms:us-east-1:587791419323:key/31675533-a34c-47b0-bced-5b3ddb25e24d"
+      }
+    ]
 
-    job_bookmarks_encryption {
-      job_bookmarks_encryption_mode = ""
-    }
+    job_bookmarks_encryption = [
+      {
+      job_bookmarks_encryption_mode = "CSE-KMS"
+      kms_key_arn = "arn:aws:kms:us-east-1:587791419323:key/31675533-a34c-47b0-bced-5b3ddb25e24d"
+      }
+    ]
 
-    s3_encryption {
-      kms_key_arn        = ""
-      s3_encryption_mode = ""
-    }
+    s3_encryption = [
+      {
+      s3_encryption_mode = "SSE-KMS"
+      kms_key_arn        = "arn:aws:kms:us-east-1:587791419323:key/31675533-a34c-47b0-bced-5b3ddb25e24d"
+      }
+    ]
   }
 }
 
