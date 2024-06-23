@@ -198,6 +198,132 @@ def lambda_handler(event, context):
             'body': json.dumps({'error': str(e)})
         }
 
+testes
+
+
+import unittest
+from unittest.mock import patch, MagicMock
+import json
+import boto3
+from moto import mock_ssm, mock_logs, mock_sns
+import time
+
+from lambda_function import (
+    load_config,
+    get_log_group_names,
+    start_log_query,
+    get_query_results,
+    extract_payload_data,
+    publish_event,
+    lambda_handler
+)
+
+# Teste para carregar as configurações
+@patch("builtins.open", new_callable=unittest.mock.mock_open, read_data='{"parameter_name": "test-parameters", "query": "fields @timestamp, @message, statusCode | sort @timestamp desc | limit 20", "topic_arn": "arn:aws:sns:::topic_test_notification"}')
+def test_load_config(mock_open):
+    config = load_config()
+    assert config['parameter_name'] == 'test-parameters'
+    assert config['query'] == 'fields @timestamp, @message, statusCode | sort @timestamp desc | limit 20'
+    assert config['topic_arn'] == 'arn:aws:sns:::topic_test_notification'
+
+# Teste para recuperar nomes dos log groups
+@mock_ssm
+def test_get_log_group_names():
+    ssm_client = boto3.client('ssm', region_name='us-east-1')
+    ssm_client.put_parameter(
+        Name='test-parameters',
+        Value='log-group-1,log-group-2',
+        Type='String'
+    )
+    parameter_name = 'test-parameters'
+    log_group_names = get_log_group_names(parameter_name)
+    assert log_group_names == ['log-group-1', 'log-group-2']
+
+# Teste para iniciar consulta de logs
+@mock_logs
+def test_start_log_query():
+    start_time = int((time.time() - 3600) * 1000)
+    end_time = int(time.time() * 1000)
+    query = "fields @timestamp, @message, statusCode | sort @timestamp desc | limit 20"
+    log_group_name = 'log-group-1'
+    
+    query_id = start_log_query(log_group_name, query, start_time, end_time)
+    assert query_id is not None
+
+# Teste para obter resultados da consulta
+@mock_logs
+def test_get_query_results():
+    query_id = "sample-query-id"
+    
+    def mock_get_query_results(queryId):
+        if queryId == query_id:
+            return {
+                'status': 'Complete',
+                'results': [
+                    [{'field': '@timestamp', 'value': '12345'}, {'field': '@message', 'value': 'event input ingestion'}, {'field': 'statusCode', 'value': '200'}]
+                ]
+            }
+    
+    with patch('boto3.client') as mock_client:
+        mock_instance = mock_client.return_value
+        mock_instance.get_query_results.side_effect = mock_get_query_results
+        query_results = get_query_results(query_id)
+        assert len(query_results) == 1
+
+# Teste para extrair dados da payload
+def test_extract_payload_data():
+    query_results = [
+        [{'field': '@timestamp', 'value': '12345'}, {'field': '@message', 'value': 'event input ingestion'}, {'field': 'statusCode', 'value': '200'}]
+    ]
+    status_code, event_input_ingestion = extract_payload_data(query_results)
+    assert status_code == '200'
+    assert event_input_ingestion == 'event input ingestion'
+
+# Teste para publicar evento
+@mock_sns
+def test_publish_event():
+    topic_arn = 'arn:aws:sns:::topic_test_notification'
+    status_code = '200'
+    event_input_ingestion = 'event input ingestion'
+
+    response = publish_event(topic_arn, status_code, event_input_ingestion)
+    assert 'MessageId' in response
+
+# Teste para o handler do Lambda
+@patch("lambda_function.load_config")
+@patch("lambda_function.get_log_group_names")
+@patch("lambda_function.start_log_query")
+@patch("lambda_function.get_query_results")
+@patch("lambda_function.publish_event")
+def test_lambda_handler(mock_publish_event, mock_get_query_results, mock_start_log_query, mock_get_log_group_names, mock_load_config):
+    mock_load_config.return_value = {
+        'parameter_name': 'test-parameters',
+        'query': 'fields @timestamp, @message, statusCode | sort @timestamp desc | limit 20',
+        'topic_arn': 'arn:aws:sns:::topic_test_notification'
+    }
+    mock_get_log_group_names.return_value = ['log-group-1']
+    mock_start_log_query.return_value = 'sample-query-id'
+    mock_get_query_results.return_value = [
+        [{'field': '@timestamp', 'value': '12345'}, {'field': '@message', 'value': 'event input ingestion'}, {'field': 'statusCode', 'value': '200'}]
+    ]
+    mock_publish_event.return_value = {'MessageId': 'sample-message-id'}
+
+    event = {}
+    context = {}
+    response = lambda_handler(event, context)
+    assert response['statusCode'] == 200
+    assert 'Processamento concluido com sucesso' in json.loads(response['body'])['message']
+
+# Executar todos os testes
+if __name__ == '__main__':
+    test_load_config()
+    test_get_log_group_names()
+    test_start_log_query()
+    test_get_query_results()
+    test_extract_payload_data()
+    test_publish_event()
+    test_lambda_handler()
+    print("Todos os testes passaram com sucesso!")
 
 
 '''
