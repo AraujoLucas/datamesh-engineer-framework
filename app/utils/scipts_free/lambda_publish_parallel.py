@@ -49,7 +49,299 @@ def lambda_handler(event, context):
         'body': json.dumps(f'{num_parallel_publish} eventos publicados em paralelo com sucesso!')
     }
 
+
+
+
+
+
+
+
+
 ____________________________________________________________________________________________________
+v2____________________________________________________________________________________________________
+import json
+import boto3
+import logging
+from datetime import datetime
+from typing import List, Dict, Any, Optional
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+def get_log_groups(parameter_name: str) -> List[str]:
+    """Fetches log group names from AWS Parameter Store."""
+    #logger.info('::: Retrieving log group names :::')
+    print(f'{datetime} ::: Retrieving log group names :::\n')
+    ssm_client = boto3.client('ssm')
+    try:
+        response = ssm_client.get_parameter(Name=parameter_name)
+        return response['Parameter']['Value'].split(',')
+    except Exception as e:
+        logger.error(f'{datetime} ::: Error retrieving log group names: {e} :::')
+        raise
+
+def get_query_results(log_group_name):
+    """Fetches logs from a specified log group."""
+    logs_client = boto3.client('logs')
+    query_results = [
+        [
+            {
+                'field': 'string',
+                'value': {
+                    "aws_account_id": "xxxxx",
+                    "api_gateway": {
+                        "endpoint": "api.path.01",
+                        "api_id": "0001",
+                        "env": "dev",
+                        "path_c": "/env/service/v1/path",
+                        "path_s": "/service/v1/path",
+                        "id_source": "xxx",
+                        "method": "GET"
+                    },
+                    "transaction": {
+                        "request": {
+                            "request_id": "id-xx",
+                            "time": "29/06/2024:16:01:00 +0000",
+                            "address": "000.00.00.000",
+                            "agent": "caos",
+                            "cert_version": "tlsvx",
+                            "protocol": "http"
+                        },
+                        "response": {
+                            "status": "200",
+                            "error": "-",
+                            "latency": "20"
+                        }
+                    },
+                    "tracing": {
+                        "id_uniq": "100",
+                        "x-ray-trace": "xxx"
+                    },
+                    "network": {
+                        "vpc_id": "xxxx",
+                        "vpce_id": "xxx",
+                        "vpce_link": "xxx"
+                    },
+                    "authorizer": {
+                        "identity": {
+                            "client_id": "xxxx",
+                            "type": "xxx",
+                            "app_id": "xxx"
+                        }
+                    },
+                    "response": {
+                        "status": "200",
+                        "error": "-",
+                        "latency": "20",
+                        "endpoint_id": "xxx"
+                    },
+                    "integration": {
+                        "response": {
+                            "status": "200",
+                            "error": "-",
+                            "latency": "20"
+                        }
+                    }
+                }
+            },
+            {
+                'field': '@ptr',
+                'value': 'apsokdopakpodsakopsdkaopksdp'
+            }
+        ],
+        [
+            {
+                'field': 'string',
+                'value': {
+                    "aws_account_id": "xxxxx",
+                    "api_gateway": {
+                        "endpoint": "api.path.011",
+                        "api_id": "0002",
+                        "env": "dev",
+                        "path_c": "/env/service/v2/path",
+                        "path_s": "/service/v2/path",
+                        "id_source": "xxx",
+                        "method": "POST"
+                    },
+                    "transaction": {
+                        "request": {
+                            "request_id": "id-xx",
+                            "time": "29/06/2024:16:01:00 +0000",
+                            "address": "000.00.00.000",
+                            "agent": "caos",
+                            "cert_version": "tlsvx",
+                            "protocol": "http"
+                        },
+                        "response": {
+                            "status": "400",
+                            "error": "-",
+                            "latency": "20"
+                        }
+                    },
+                    "tracing": {
+                        "id_uniq": "10",
+                        "x-ray-trace": "xxx"
+                    },
+                    "network": {
+                        "vpc_id": "xxxx",
+                        "vpce_id": "xxx",
+                        "vpce_link": "xxx"
+                    },
+                    "authorizer": {
+                        "identity": {
+                            "client_id": "xxxx",
+                            "type": "xxx",
+                            "app_id": "xxx"
+                        }
+                    },
+                    "response": {
+                        "status": "200",
+                        "error": "-",
+                        "latency": "20",
+                        "endpoint_id": "xxx"
+                    },
+                    "integration": {
+                        "response": {
+                            "status": "200",
+                            "error": "-",
+                            "latency": "20"
+                        }
+                    }
+                }
+            },
+            {
+                'field': '@ptr2',
+                'value': 'AIDPAWKpaksodkpokDKpwokpOKD'
+            }
+        ]
+    ]
+    return query_results
+
+
+def extract_values(log: List[Dict[str, Any]]) -> List[Optional[Dict[str, Any]]]:
+    """Extracts necessary values from a list of log entries."""
+    print(f'{datetime} ::: Extracts necessary values from a list of log entries :::\n')
+    
+    results = []
+    results_errors = []
+    try:
+        api_gateway = log.get('value', {}).get('api_gateway','')
+        print(f'{datetime} api_gateway:{api_gateway}')
+    
+        path_c = api_gateway.get('path_c')
+        print(f'{datetime} path_c:{path_c}')
+        
+        method = api_gateway.get('method')
+        print(f'{datetime} method:{method}')
+        
+        transaction = log.get('value', {}).get('transaction','')
+        print(f'{datetime} transaction:{transaction}')
+        
+        status_code = transaction.get('response', {}).get('status','')
+        print(f'{datetime} status_code:{status_code}')
+        
+        tracing = log.get('value', {}).get('tracing','')
+        print(f'{datetime} tracing:{tracing}')
+        
+        uniq_id = tracing.get('id_uniq','')
+        print(f'{datetime} uniq_id:{uniq_id}')
+        
+        extracted_entry = {
+            "path_c": path_c,
+            "method": method,
+            "status_code": status_code,
+            "uniq_id": uniq_id,
+            "data": log
+        }
+        results.append(extracted_entry)
+        
+    except Exception as e:
+        logger.error(f'{datetime} ::: Error extract variables: {log} :::')
+        results_errors.append(log)
+    
+    return results
+    
+    
+    
+    
+
+def create_payload(extracted_values: Dict[str, Any]) -> Dict[str, Any]:
+    """Creates the payload to be sent to SNS."""
+    #print(f':: Creates the payload to be sent to SNS. {extracted_values}:::')
+    return {
+        "data_product": "v1",
+        "contract": "10",
+        "key": extracted_values["path_c"],
+        "method": extracted_values["method"],
+        "dados_contrato": {
+            "padrao": {
+                "dt_get": datetime,
+                "payload_metadata": {
+                    "type": 'inter',
+                    "metodo": extracted_values["method"],
+                    "status_response": extracted_values["status_code"]
+                },
+                "request": {"data": [{"key_rr_1": "event_input_ingestion"}]},
+                "response": json.dumps(extracted_values['data']),
+                "header_request": "{}",
+                "header_response": "{}",
+                "id": extracted_values["uniq_id"],
+            }
+        }
+    }
+
+def publish_to_sns(payload: Dict[str, Any], topic_arn: str):
+    """Publishes the payload to the specified SNS topic."""
+    #logger.info(f':: Publishing payload to SNS ::: {json.dumps(payload, indent=4)}')
+    sns_client = boto3.client('sns')
+    
+    try:
+        sns_client.publish(
+            TopicArn=topic_arn,
+            Message=json.dumps(payload),
+            Subject='event_test_1'
+        )
+    except Exception as e:
+        logger.error(f'::: Error in publish sns topic: {e} :::')
+    
+        
+def process_logs(query_results: List[List[Dict[str, Any]]], topic_arn: str):
+    """Processes logs and publishes payloads to SNS."""
+    def create_and_publish_payload(entry: Dict[str, Any]):
+        extracted_values_list = extract_values(entry)
+        for extracted_values in extracted_values_list:
+            if extracted_values:
+                payload = create_payload(extracted_values)
+                publish_to_sns(payload, topic_arn)
+
+    flattened_query_results = [item for sublist in query_results for item in sublist]
+    list(map(create_and_publish_payload, flattened_query_results))
+
+def lambda_handler(event: Dict[str, Any], context: Any):
+    parameter_name = event.get('parameter_name')
+    topic_arn = event.get('topic_arn')
+    
+    logger.info('::: Retrieving log group names :::')
+    log_groups = get_log_groups(parameter_name)
+    
+    logger.info(f':: list witch log group names to extrac: {log_groups} :::')
+    print(f'{datetime} ::: list witch log group names to extrac: {log_groups} ::: \n')
+    
+    for log_group in log_groups:
+        logger.info(f':: Extract log group:{log_group} :::')
+        print(f'{datetime} ::: Extract log group:{log_group} :::\n')
+        query_results = get_query_results(log_group)
+        
+        logger.info(f':: Processing results:{query_results} :::')
+        print(f'{datetime} ::: Processing results:{query_results} :::\n')
+        process_logs(query_results, topic_arn)
+
+
+
+
+____________________________________________________________________________________________________
+v1____________________________________________________________________________________________________
 
 import json
 import boto3
