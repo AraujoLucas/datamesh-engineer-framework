@@ -1,0 +1,31 @@
+Formulário de Perguntas
+Informações do Cliente:
+
+Quais são os principais atributos que você precisa rastrear sobre os clientes?
+Quais informações sobre os clientes mudam ao longo do tempo e precisam ser historicamente rastreadas?
+Quais segmentações de clientes são importantes para a análise do negócio?
+Informações da Carteira:
+
+Quais são os atributos principais das carteiras que você gerencia?
+Quais métricas financeiras são essenciais para monitorar a saúde das carteiras?
+Existe alguma informação histórica sobre as carteiras que precisa ser mantida?
+Informações de Movimentações:
+
+Quais tipos de transações ou movimentações são relevantes para o seu negócio?
+Quais são as principais métricas financeiras que você deseja analisar nas movimentações?
+Existe algum detalhamento específico que você precisa para cada tipo de transação?
+Produtos e Serviços:
+
+Quais são os atributos principais dos produtos que você oferece?
+Quais informações sobre os produtos mudam ao longo do tempo e precisam ser rastreadas historicamente?
+Como você deseja analisar o desempenho dos produtos ao longo do tempo?
+Saúde do Negócio e Rentabilidade:
+
+Quais métricas você usa para medir a saúde do negócio?
+Quais indicadores de rentabilidade são mais importantes para você?
+Como você rastreia e analisa a performance financeira ao longo do tempo?
+Análise Temporal:
+
+Qual é o intervalo de tempo para análise (diário, mensal, trimestral, anual)?
+Você precisa de análises comparativas entre diferentes períodos? Quais?
+Existe algum evento ou marco temporal específico que deve ser considerado nas análises?
