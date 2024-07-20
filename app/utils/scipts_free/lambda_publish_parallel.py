@@ -739,7 +739,7 @@ def lambda_handler(event, context):
     
             status_code, event_input_ingestion = extract_payload_data(query_results)
             
-            topic_arn = 'arn:aws:sns:us-east-1:587791419323:topic_test_notification'
+            topic_arn = 'arn:aws:sns:::topic_test_notification'
             response_publish = publish_event(
                 topic_arn,status_code,event_input_ingestion)
             print(f'response_publish -> {response_publish}')
