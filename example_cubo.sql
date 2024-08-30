@@ -78,3 +78,48 @@ join movimentacao tb2
 on tb1.cod_id_cliente = tb2.cod_id_cliente
 where tb2.anomesdia = '20240717'
 
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Dados fictícios para contas abertas, ativações no M0 e erros
+meses = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+contas_abertas = np.array([1000, 1200, 1500, 1300, 1600, 1700])
+ativacoes_m0 = np.array([400, 500, 550, 480, 600, 650])
+erros_ativos = np.array([50, 55, 60, 48, 70, 75])
+erros_nao_ativos = np.array([200, 300, 400, 380, 450, 480])
+
+# Percentual de ativação no M0
+percentual_ativacao_m0 = (ativacoes_m0 / contas_abertas) * 100
+
+# Gráfico de Barras Empilhadas - Percentual de Ativação no M0
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.bar(meses, percentual_ativacao_m0, color='green', label='Ativados')
+ax.bar(meses, 100 - percentual_ativacao_m0, bottom=percentual_ativacao_m0, color='red', label='Não Ativados')
+
+ax.set_xlabel('Meses')
+ax.set_ylabel('Percentual (%)')
+ax.set_title('Percentual de Ativação no M0 em Relação ao Total de Contas Abertas')
+ax.legend()
+
+plt.tight_layout()
+plt.show()
+
+# Gráfico de Linhas - Percentual de Erros MoM
+fig, ax = plt.subplots(figsize=(10, 6))
+percentual_erros_ativos = (erros_ativos / ativacoes_m0) * 100
+percentual_erros_nao_ativos = (erros_nao_ativos / (contas_abertas - ativacoes_m0)) * 100
+
+ax.plot(meses, percentual_erros_ativos, marker='o', color='blue', label='Ativados com Erros')
+ax.plot(meses, percentual_erros_nao_ativos, marker='o', color='orange', label='Não Ativados com Erros')
+
+ax.set_xlabel('Meses')
+ax.set_ylabel('Percentual de Erros (%)')
+ax.set_title('Percentual de Erros MoM: Ativados vs Não Ativados')
+ax.legend()
+
+plt.tight_layout()
+plt.show()
+
+
