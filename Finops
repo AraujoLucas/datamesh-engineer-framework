@@ -1,0 +1,30 @@
+import boto3
+import datetime
+
+# Criar um cliente para o AWS Cost Explorer
+client = boto3.client('ce')
+
+# Define o intervalo de datas para análise
+start_date = (datetime.datetime.today() - datetime.timedelta(days=30)).strftime('%Y-%m-%d')
+end_date = datetime.datetime.today().strftime('%Y-%m-%d')
+
+# Chamar a API de Cost Explorer
+response = client.get_cost_and_usage(
+    TimePeriod={
+        'Start': start_date,
+        'End': end_date
+    },
+    Granularity='DAILY',
+    Metrics=['UnblendedCost'],
+    GroupBy=[
+        {'Type': 'DIMENSION', 'Key': 'SERVICE'},
+        {'Type': 'DIMENSION', 'Key': 'USAGE_TYPE'}
+    ]
+)
+
+# Processar e imprimir os resultados
+for result in response['ResultsByTime']:
+    for group in result['Groups']:
+        print(f"Date: {result['TimePeriod']['Start']} - {result['TimePeriod']['End']}")
+        print(f"Service: {group['Keys'][0]}, Usage Type: {group['Keys'][1]}")
+        print(f"Cost: {group['Metrics']['UnblendedCost']['Amount']}")
