@@ -77,4 +77,18 @@ query_costs = get_query_cost()
 for query_cost in query_costs:
     print(query_cost)
 
+import re
+
+def extract_data_scanned(log_events):
+    total_data_scanned = 0
+    data_scanned_pattern = re.compile(r"DataScannedInBytes=(\d+)")
+
+    for event in log_events:
+        message = event['message']
+        matches = data_scanned_pattern.findall(message)
+        if matches:
+            # Como podemos ter mais de um match por log, somamos todos eles
+            total_data_scanned += sum(int(match) for match in matches)
+
+    return total_data_scanned
 
