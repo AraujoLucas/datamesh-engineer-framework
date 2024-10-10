@@ -28,3 +28,53 @@ for result in response['ResultsByTime']:
         print(f"Date: {result['TimePeriod']['Start']} - {result['TimePeriod']['End']}")
         print(f"Service: {group['Keys'][0]}, Usage Type: {group['Keys'][1]}")
         print(f"Cost: {group['Metrics']['UnblendedCost']['Amount']}")
+
+
+
+import boto3
+from datetime import datetime, timedelta
+
+# Cria uma instância do cliente Athena e CloudWatch Logs
+athena_client = boto3.client('athena')
+logs_client = boto3.client('logs')
+
+# Data 30 dias atrás
+start_date = datetime.now() - timedelta(days=30)
+end_date = datetime.now()
+
+# Consultar execuções de queries
+def get_query_cost():
+    query_costs = []
+
+    # Listar as execuções de queries
+    response = athena_client.list_query_executions()
+    for execution_id in response['QueryExecutionIds']:
+        # Detalhes da execução
+        execution = athena_client.get_query_execution(QueryExecutionId=execution_id)
+        submission_date = execution['QueryExecution']['Status']['SubmissionDateTime']
+        
+        if submission_date >= start_date and submission_date <= end_date:
+            log_group = '/aws/athena/query-results'
+            log_stream = execution_id  # Ajuste conforme a configuração de log
+            
+            # Consultar logs para a query específica
+            log = logs_client.get_log_events(logGroupName=log_group, logStreamName=log_stream)
+            data_scanned = extract_data_scanned(log['events'])  # Implemente esta função para extrair dados escaneados
+
+            cost_per_tb = 5.0  # custo por TB escaneado
+            cost = (data_scanned / (1024**4)) * cost_per_tb  # Convert bytes to terabytes and calculate cost
+
+            query_costs.append({
+                'Query': execution['QueryExecution']['Query'],
+                'DataScanned': data_scanned,
+                'Cost': cost
+            })
+
+    return query_costs
+
+# Chama a função e imprime os resultados
+query_costs = get_query_cost()
+for query_cost in query_costs:
+    print(query_cost)
+
+
