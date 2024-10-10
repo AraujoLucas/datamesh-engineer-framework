@@ -179,5 +179,44 @@ queries_last_month = list_queries_last_month()
 for query in queries_last_month:
     print(query)
 
+import boto3
+from datetime import datetime, timedelta
+
+# Inicializar o cliente Athena
+athena_client = boto3.client('athena', region_name='us-west-2')  # Substitua 'us-west-2' pela sua região
+
+# Data 30 dias atrás
+start_date = datetime.now() - timedelta(days=30)
+
+# Função para listar as execuções de queries no último mês
+def list_queries_last_month():
+    query_details = []
+
+    # Paginação para listar todas as execuções de queries
+    paginator = athena_client.get_paginator('list_query_executions')
+    for page in paginator.paginate():
+        for query_execution_id in page['QueryExecutionIds']:
+            # Obter detalhes de cada execução de query
+            execution = athena_client.get_query_execution(QueryExecutionId=query_execution_id)
+            execution_data = execution['QueryExecution']
+            submission_date = execution_data['Status']['SubmissionDateTime']
+
+            # Filtrar queries pelo último mês
+            if submission_date >= start_date:
+                query_info = {
+                    'QueryExecutionId': query_execution_id,
+                    'Query': execution_data['Query'],
+                    'SubmissionDateTime': submission_date.strftime('%Y-%m-%d %H:%M:%S'),
+                    'State': execution_data['Status']['State'],
+                    'DataScannedInBytes': execution_data['Statistics'].get('DataScannedInBytes', 0)  # Alguns estados podem não ter dados escaneados
+                }
+                query_details.append(query_info)
+
+    return query_details
+
+# Chama a função e imprime os resultados
+queries_last_month = list_queries_last_month()
+for query in queries_last_month:
+    print(query)
 
 
